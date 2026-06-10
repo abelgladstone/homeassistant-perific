@@ -20,11 +20,7 @@ def fmt_ts(ts: int) -> str:
     return datetime.fromtimestamp(ts / 1000, tz=timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
 
 
-def print_raw_packet_data(label: str, packet):
-    """Print every field in the raw packet data dict for discovery."""
-    if packet is None:
-        return
-    print(f"  {label} raw data fields: {packet.data.model_dump(by_alias=True)}")
+PHASES = ["L1", "L2", "L3"]
 
 
 def print_packet(label: str, packet):
@@ -33,40 +29,62 @@ def print_packet(label: str, packet):
         return
     d = packet.data
     print(f"  {label} (ts={fmt_ts(packet.ts)}, fw={packet.fw}, rssi={packet.rssi} dBm):")
-    # Voltage
-    uavg = d.uavg or []
+
     huavg = d.huavg or []
-    for i, phase in enumerate(["L1", "L2", "L3"]):
-        v = uavg[i] if i < len(uavg) else None
-        hv = huavg[i] if i < len(huavg) else None
-        if v is not None:
-            note = f"  (peak {hv:.1f} V)" if hv is not None else ""
-            print(f"    Voltage {phase}: {v:.1f} V{note}")
-    # Current
-    iavg = d.iavg or []
     hiavg = d.hiavg or []
-    for i, phase in enumerate(["L1", "L2", "L3"]):
-        c = iavg[i] if i < len(iavg) else None
-        hc = hiavg[i] if i < len(hiavg) else None
+    himin = d.himin or []
+    himax = d.himax or []
+
+    # Voltage
+    for i, phase in enumerate(PHASES):
+        v = huavg[i] if i < len(huavg) else None
+        if v is not None:
+            print(f"    Voltage {phase}:  {v:.1f} V")
+
+    # Current + power per phase
+    total_import_w = 0.0
+    total_export_w = 0.0
+    for i, phase in enumerate(PHASES):
+        v = huavg[i] if i < len(huavg) else None
+        c = hiavg[i] if i < len(hiavg) else None
+        lo = himin[i] if i < len(himin) else None
+        hi = himax[i] if i < len(himax) else None
         if c is not None:
-            note = f"  (peak {hc:.2f} A)" if hc is not None else ""
-            print(f"    Current {phase}: {c:.2f} A{note}")
-    # Power per phase (V * I)
-    total_power = 0.0
-    for i, phase in enumerate(["L1", "L2", "L3"]):
-        v = uavg[i] if i < len(uavg) else None
-        c = iavg[i] if i < len(iavg) else None
+            bounds = ""
+            if lo is not None and hi is not None:
+                bounds = f"  (min {lo:.2f} / max {hi:.2f} A)"
+            print(f"    Current {phase}: {c:.2f} A{bounds}")
         if v is not None and c is not None:
-            p = v * c / 1000
-            total_power += p
-            print(f"    Power   {phase}: {p:.3f} kW")
-    if total_power:
-        print(f"    Power Total: {total_power:.3f} kW")
-    # Energy
+            w = v * c / 1000  # kW
+            if w >= 0:
+                total_import_w += w
+                print(f"    Power   {phase}: {w:.3f} kW (import)")
+            else:
+                total_export_w += abs(w)
+                print(f"    Power   {phase}: {abs(w):.3f} kW (export)")
+
+    if total_import_w or total_export_w:
+        print(f"    Power Total: import {total_import_w:.3f} kW / export {total_export_w:.3f} kW")
+
+    # Per-phase energy (hour/day packets)
+    hwpi = d.hwpi or []
+    hwpo = d.hwpo or []
+    for i, phase in enumerate(PHASES):
+        pi = hwpi[i] if i < len(hwpi) else None
+        po = hwpo[i] if i < len(hwpo) else None
+        if pi is not None or po is not None:
+            parts = []
+            if pi is not None:
+                parts.append(f"import {pi:.3f} kWh")
+            if po is not None:
+                parts.append(f"export {po:.3f} kWh")
+            print(f"    Energy  {phase}: {' / '.join(parts)}")
+
+    # Energy totals
     if d.hwi is not None:
-        print(f"    Energy Import: {d.hwi:.3f} kWh")
-    if d.hwei is not None:
-        print(f"    Energy Export: {d.hwei:.3f} kWh")
+        print(f"    Energy Import Total: {d.hwi:.3f} kWh")
+    if d.hwo is not None:
+        print(f"    Energy Export Total: {d.hwo:.3f} kWh")
 
 
 async def main():
@@ -162,10 +180,6 @@ async def main():
         print_packet("Minute",    lp.phase_minute)
         print_packet("Hour",      lp.phase_hour)
         print_packet("Day",       lp.phase_day)
-        print("\n  [Raw data fields for discovery]")
-        for pkt_label, pkt in [("Real-Time", lp.phase_real_time), ("Minute", lp.phase_minute),
-                                ("Hour", lp.phase_hour), ("Day", lp.phase_day)]:
-            print_raw_packet_data(pkt_label, pkt)
     print(f"\n{'=' * 50}")
 
 

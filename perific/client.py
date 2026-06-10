@@ -22,21 +22,19 @@ class AccountOverviewResponse(BaseModel):
     items: list[Item] = Field(alias="Items")
 
 class ItemPacketData(BaseModel):
-    model_config = {"extra": "allow"}
-
     dv: Optional[int] = Field(default=None, alias="dv")
-    # Current
+    # Current avg, min, max per phase
     hiavg: Optional[List[float]] = Field(default=None, alias="hiavg")
-    iavg: Optional[List[float]]  = Field(default=None, alias="iavg")
-    # Voltage
+    himin: Optional[List[float]] = Field(default=None, alias="himin")
+    himax: Optional[List[float]] = Field(default=None, alias="himax")
+    # Voltage avg per phase
     huavg: Optional[List[float]] = Field(default=None, alias="huavg")
-    uavg: Optional[List[float]]  = Field(default=None, alias="uavg")
-    # Energy import
-    hwi: Optional[float] = Field(default=None, alias="hwi")
-    # Energy export (field name to be confirmed from API response)
-    hwei: Optional[float] = Field(default=None, alias="hwei")
-    # himin: Optional[List[float]] = Field(alias="himin")
-    # himax: Optional[List[float]] = Field(alias="himax")
+    # Energy totals
+    hwi:  Optional[float]       = Field(default=None, alias="hwi")   # import total kWh
+    hwo:  Optional[float]       = Field(default=None, alias="hwo")   # export total kWh
+    # Energy per phase
+    hwpi: Optional[List[float]] = Field(default=None, alias="hwpi")  # import per phase kWh
+    hwpo: Optional[List[float]] = Field(default=None, alias="hwpo")  # export per phase kWh
 
 class ItemPacket(BaseModel):
     hdr: int = Field(alias="hdr")
