@@ -17,7 +17,7 @@ ENV_FILE = Path(__file__).parent / ".env"
 
 
 def fmt_ts(ts: int) -> str:
-    return datetime.fromtimestamp(ts, tz=timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
+    return datetime.fromtimestamp(ts / 1000, tz=timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
 
 
 def print_raw_packet_data(label: str, packet):
