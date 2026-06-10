@@ -7,9 +7,13 @@ import getpass
 import os
 import sys
 from datetime import datetime, timezone
+from pathlib import Path
 
+from dotenv import load_dotenv, set_key
 from perific.client import Client, AuthenticationError
 from const import API_URL
+
+ENV_FILE = Path(__file__).parent / ".env"
 
 
 def fmt_ts(ts: int) -> str:
@@ -66,6 +70,8 @@ def print_packet(label: str, packet):
 
 
 async def main():
+    load_dotenv(ENV_FILE)
+
     parser = argparse.ArgumentParser(description="Perific Energy Meter Terminal Client")
     parser.add_argument("-u", "--username", default=os.environ.get("PERIFIC_USERNAME"), help="Account username (or set PERIFIC_USERNAME)")
     parser.add_argument("-p", "--password", default=os.environ.get("PERIFIC_PASSWORD"), help="Account password (or set PERIFIC_PASSWORD)")
@@ -73,8 +79,23 @@ async def main():
 
     print("=== Perific Energy Meter Terminal Client ===\n")
 
-    username = args.username or input("Username: ").strip()
-    password = args.password or getpass.getpass("Password: ")
+    prompted = False
+    username = args.username
+    password = args.password
+
+    if not username:
+        username = input("Username: ").strip()
+        prompted = True
+    if not password:
+        password = getpass.getpass("Password: ")
+        prompted = True
+
+    if prompted:
+        save = input("Save credentials to .env for next time? [y/N]: ").strip().lower()
+        if save == "y":
+            set_key(ENV_FILE, "PERIFIC_USERNAME", username)
+            set_key(ENV_FILE, "PERIFIC_PASSWORD", password)
+            print(f"Credentials saved to {ENV_FILE}\n")
 
     client = Client(API_URL)
 
