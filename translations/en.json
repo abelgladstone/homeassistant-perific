@@ -55,6 +55,14 @@
       "power_l3": {
         "name": "Power L3",
         "icon": "mdi:flash"
+      },
+      "energy_total": {
+        "name": "Energy Import Total",
+        "icon": "mdi:transmission-tower-import"
+      },
+      "energy_export_total": {
+        "name": "Energy Export Total",
+        "icon": "mdi:transmission-tower-export"
       }
     }
   }

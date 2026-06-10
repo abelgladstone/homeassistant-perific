@@ -17,6 +17,7 @@ ATTR_POWER_L3 = "power_l3"
 ATTR_POWER_TOTAL = "power_total"
 
 ATTR_ENERGY_TOTAL = "energy_total"
+ATTR_ENERGY_EXPORT_TOTAL = "energy_export_total"
 
 ATTR_ID="ItemId"
 ATTR_NAME = "Name"

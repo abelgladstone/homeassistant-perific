@@ -33,6 +33,7 @@ from .const import (
     ATTR_CURRENT_L3,
     ATTR_POWER_TOTAL,
     ATTR_ENERGY_TOTAL,
+    ATTR_ENERGY_EXPORT_TOTAL,
     ATTR_MAC_ADDRESS,
     ATTR_CREATION_TIME,
     ATTR_ID,
@@ -191,6 +192,15 @@ SENSOR_TYPES: tuple[PerificSensorEntityDescription, ...] = (
         value_func=lambda data: safe_get(data.data, "hwi", -1),
     ),
     PerificSensorEntityDescription(
+        key=ATTR_ENERGY_EXPORT_TOTAL,
+        translation_key="energy_export_total",
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        suggested_display_precision=3,
+        value_func=lambda data: safe_get(data.data, "hwo", -1),
+    ),
+    PerificSensorEntityDescription(
         key=ATTR_MAC_ADDRESS,
         translation_key="mac_address",
         device_class=None,
@@ -289,6 +299,7 @@ async def async_setup_entry(
                 ATTR_POWER_L3,
                 ATTR_POWER_TOTAL,
                 ATTR_ENERGY_TOTAL,
+                ATTR_ENERGY_EXPORT_TOTAL,
                 ATTR_MAC_ADDRESS,
                 ATTR_CREATION_TIME,
                 ATTR_ID,
@@ -347,7 +358,7 @@ class PerificSensor(PerificEntity, SensorEntity):
         if not latest_data:
             return None
         try:
-            if key == ATTR_ENERGY_TOTAL:
+            if key in (ATTR_ENERGY_TOTAL, ATTR_ENERGY_EXPORT_TOTAL):
                 return self.entity_description.value_func(latest_data.phase_minute)
             return self.entity_description.value_func(latest_data.phase_real_time)
         
