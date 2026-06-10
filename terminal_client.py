@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 """Terminal client for Perific Energy Meter - reads all available data."""
 
+import argparse
 import asyncio
 import getpass
+import os
 import sys
 from datetime import datetime, timezone
 
@@ -64,10 +66,15 @@ def print_packet(label: str, packet):
 
 
 async def main():
+    parser = argparse.ArgumentParser(description="Perific Energy Meter Terminal Client")
+    parser.add_argument("-u", "--username", default=os.environ.get("PERIFIC_USERNAME"), help="Account username (or set PERIFIC_USERNAME)")
+    parser.add_argument("-p", "--password", default=os.environ.get("PERIFIC_PASSWORD"), help="Account password (or set PERIFIC_PASSWORD)")
+    args = parser.parse_args()
+
     print("=== Perific Energy Meter Terminal Client ===\n")
 
-    username = input("Username: ").strip()
-    password = getpass.getpass("Password: ")
+    username = args.username or input("Username: ").strip()
+    password = args.password or getpass.getpass("Password: ")
 
     client = Client(API_URL)
 
