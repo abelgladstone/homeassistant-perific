@@ -14,6 +14,13 @@ def fmt_ts(ts: int) -> str:
     return datetime.fromtimestamp(ts, tz=timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
 
 
+def print_raw_packet_data(label: str, packet):
+    """Print every field in the raw packet data dict for discovery."""
+    if packet is None:
+        return
+    print(f"  {label} raw data fields: {packet.data.model_dump(by_alias=True)}")
+
+
 def print_packet(label: str, packet):
     if packet is None:
         print(f"  {label}: no data")
@@ -51,7 +58,9 @@ def print_packet(label: str, packet):
         print(f"    Power Total: {total_power:.3f} kW")
     # Energy
     if d.hwi is not None:
-        print(f"    Energy Total: {d.hwi:.3f} kWh")
+        print(f"    Energy Import: {d.hwi:.3f} kWh")
+    if d.hwei is not None:
+        print(f"    Energy Export: {d.hwei:.3f} kWh")
 
 
 async def main():
@@ -125,6 +134,10 @@ async def main():
         print_packet("Minute",    lp.phase_minute)
         print_packet("Hour",      lp.phase_hour)
         print_packet("Day",       lp.phase_day)
+        print("\n  [Raw data fields for discovery]")
+        for pkt_label, pkt in [("Real-Time", lp.phase_real_time), ("Minute", lp.phase_minute),
+                                ("Hour", lp.phase_hour), ("Day", lp.phase_day)]:
+            print_raw_packet_data(pkt_label, pkt)
     print(f"\n{'=' * 50}")
 
 

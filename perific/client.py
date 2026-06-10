@@ -22,6 +22,8 @@ class AccountOverviewResponse(BaseModel):
     items: list[Item] = Field(alias="Items")
 
 class ItemPacketData(BaseModel):
+    model_config = {"extra": "allow"}
+
     dv: Optional[int] = Field(default=None, alias="dv")
     # Current
     hiavg: Optional[List[float]] = Field(default=None, alias="hiavg")
@@ -29,7 +31,10 @@ class ItemPacketData(BaseModel):
     # Voltage
     huavg: Optional[List[float]] = Field(default=None, alias="huavg")
     uavg: Optional[List[float]]  = Field(default=None, alias="uavg")
+    # Energy import
     hwi: Optional[float] = Field(default=None, alias="hwi")
+    # Energy export (field name to be confirmed from API response)
+    hwei: Optional[float] = Field(default=None, alias="hwei")
     # himin: Optional[List[float]] = Field(alias="himin")
     # himax: Optional[List[float]] = Field(alias="himax")
 
