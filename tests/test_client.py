@@ -155,7 +155,7 @@ async def test_get_latest_packets_success():
             "LatestPackets": {
                 "PhaseDay": {
                     "hdr": 1, "iid": 10, "ts": 12345, "seqno": 1, "it": "test",
-                    "pv": 5, "fw": "1.0", "rssi": -30, "data": {"dv": 10}
+                    "pv": 5, "fw": "1.0", "rssi": -30, "data": {"dv": 10, "hwo": 42.5}
                 },
                 "PhaseHour": None,
                 "PhaseMinute": None,
@@ -174,6 +174,7 @@ async def test_get_latest_packets_success():
         assert len(result) == 1
         assert result[0].item_id == 1
         assert result[0].latest_packets.phase_day.hdr == 1
+        assert result[0].latest_packets.phase_day.data.hwo == 42.5
 
 
 #unauthorized

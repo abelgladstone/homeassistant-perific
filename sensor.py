@@ -198,7 +198,7 @@ SENSOR_TYPES: tuple[PerificSensorEntityDescription, ...] = (
         state_class=SensorStateClass.TOTAL_INCREASING,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         suggested_display_precision=3,
-        value_func=lambda data: safe_get(data.data, "hwo", -1),
+        value_func=lambda data: data.data.hwo if data.data.hwo is not None else -1,
     ),
     PerificSensorEntityDescription(
         key=ATTR_MAC_ADDRESS,
@@ -359,7 +359,11 @@ class PerificSensor(PerificEntity, SensorEntity):
             return None
         try:
             if key in (ATTR_ENERGY_TOTAL, ATTR_ENERGY_EXPORT_TOTAL):
+                if latest_data.phase_minute is None:
+                    return None
                 return self.entity_description.value_func(latest_data.phase_minute)
+            if latest_data.phase_real_time is None:
+                return None
             return self.entity_description.value_func(latest_data.phase_real_time)
         
         except Exception as e:
